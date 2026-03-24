@@ -36,11 +36,15 @@ public class ProcessoIntegracaoResultadoListener {
                 processo.setIntegracaoErro(null);
                 processo.setIntegracaoStatus(IntegracaoStatusProcesso.SUCESSO);
                 processoRepository.save(processo);
-                if (processo.getSituacao() != SituacaoProcesso.CONCLUIDO
-                        && processo.getSituacao() != SituacaoProcesso.CANCELADO
-                        && processo.getSituacao() != SituacaoProcesso.ARQUIVADO) {
+                if (processo.getSituacao() == SituacaoProcesso.DEFERIDO) {
                     processoGestaoService.executar(processo.getId(), "SISTEMA");
                     processoGestaoService.concluir(processo.getId(), "SISTEMA");
+                } else if (processo.getSituacao() != SituacaoProcesso.CONCLUIDO
+                        && processo.getSituacao() != SituacaoProcesso.CANCELADO
+                        && processo.getSituacao() != SituacaoProcesso.ARQUIVADO
+                        && processo.getSituacao() != SituacaoProcesso.EM_EXECUCAO) {
+                    log.warn("Retorno de integracao recebido mas processo ID {} esta em estado inesperado: {}",
+                            processo.getId(), processo.getSituacao());
                 }
             } else {
                 processo.setIntegracaoStatus(IntegracaoStatusProcesso.ERRO);

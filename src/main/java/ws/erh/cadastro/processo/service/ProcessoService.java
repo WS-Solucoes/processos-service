@@ -133,7 +133,8 @@ public class ProcessoService extends AbstractTenantService implements ProcessoSe
         Processo processo = findById(id);
 
         if (processo.getSituacao() == SituacaoProcesso.CONCLUIDO ||
-                processo.getSituacao() == SituacaoProcesso.CANCELADO) {
+                processo.getSituacao() == SituacaoProcesso.CANCELADO ||
+                processo.getSituacao() == SituacaoProcesso.ARQUIVADO) {
             throw new IllegalStateException("Processo na situação " + processo.getSituacao().getDescricao() + " não pode ser cancelado.");
         }
 
@@ -171,7 +172,6 @@ public class ProcessoService extends AbstractTenantService implements ProcessoSe
         dashboard.put("rascunhos", processoRepository.countBySituacao(SituacaoProcesso.RASCUNHO));
         dashboard.put("abertos", processoRepository.countBySituacao(SituacaoProcesso.ABERTO));
         dashboard.put("emAnalise", processoRepository.countBySituacao(SituacaoProcesso.EM_ANALISE));
-        dashboard.put("aguardandoServidor", processoRepository.countBySituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO));
         dashboard.put("pendentes", processoRepository.countBySituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO));
         dashboard.put("aguardandoChefia", processoRepository.countBySituacao(SituacaoProcesso.AGUARDANDO_CHEFIA));
         dashboard.put("deferidos", processoRepository.countBySituacao(SituacaoProcesso.DEFERIDO));
@@ -179,6 +179,7 @@ public class ProcessoService extends AbstractTenantService implements ProcessoSe
         dashboard.put("emExecucao", processoRepository.countBySituacao(SituacaoProcesso.EM_EXECUCAO));
         dashboard.put("concluidos", processoRepository.countBySituacao(SituacaoProcesso.CONCLUIDO));
         dashboard.put("cancelados", processoRepository.countBySituacao(SituacaoProcesso.CANCELADO));
+        dashboard.put("arquivados", processoRepository.countBySituacao(SituacaoProcesso.ARQUIVADO));
         dashboard.put("vencidos", processoRepository.findVencidos().size());
 
         LocalDateTime inicioMes = LocalDate.now().withDayOfMonth(1).atStartOfDay();

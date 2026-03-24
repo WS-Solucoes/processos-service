@@ -193,6 +193,9 @@ public class ProcessoGestaoService extends AbstractTenantService implements Proc
     public Processo executar(Long processoId, String usuario) {
         log.info("Marcando processo ID: {} em execução", processoId);
         Processo processo = findProcesso(processoId);
+        if (processo.getSituacao() != SituacaoProcesso.DEFERIDO) {
+            throw new IllegalStateException("Processo deve estar DEFERIDO para ser executado. Estado atual: " + processo.getSituacao());
+        }
 
         String anterior = processo.getSituacao().name();
         Integer etapaAnterior = processo.getEtapaAtual();
@@ -210,6 +213,9 @@ public class ProcessoGestaoService extends AbstractTenantService implements Proc
     public Processo concluir(Long processoId, String usuario) {
         log.info("Concluindo processo ID: {}", processoId);
         Processo processo = findProcesso(processoId);
+        if (processo.getSituacao() != SituacaoProcesso.EM_EXECUCAO) {
+            throw new IllegalStateException("Processo deve estar EM_EXECUCAO para ser concluído. Estado atual: " + processo.getSituacao());
+        }
 
         String anterior = processo.getSituacao().name();
         Integer etapaAnterior = processo.getEtapaAtual();
