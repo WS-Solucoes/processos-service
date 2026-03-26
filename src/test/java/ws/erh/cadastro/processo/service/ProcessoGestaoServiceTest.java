@@ -212,15 +212,14 @@ class ProcessoGestaoServiceTest {
         @Test
         @DisplayName("Deve solicitar documentação no processo")
         void deveSolicitarDocumentacao() {
-            processo.setSituacao(SituacaoProcesso.EM_ANALISE);
-            when(processoRepository.findById(1L)).thenReturn(Optional.of(processo));
-            when(processoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-            when(historicoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            processo.setSituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO);
+            when(complementacaoService.solicitarComplementacao(eq(1L), any(), eq("analista")))
+                    .thenReturn(processo);
 
             Processo result = service.solicitarDocumentacao(1L, "Enviar RG e CPF", "analista");
 
             assertEquals(SituacaoProcesso.PENDENTE_DOCUMENTACAO, result.getSituacao());
-            verify(historicoRepository).save(any());
+            verify(complementacaoService).solicitarComplementacao(eq(1L), any(), eq("analista"));
         }
     }
 
@@ -333,14 +332,14 @@ class ProcessoGestaoServiceTest {
         @Test
         @DisplayName("Deve devolver processo ao servidor")
         void deveDevolverProcesso() {
-            processo.setSituacao(SituacaoProcesso.EM_ANALISE);
-            when(processoRepository.findById(1L)).thenReturn(Optional.of(processo));
-            when(processoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-            when(historicoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            processo.setSituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO);
+            when(complementacaoService.solicitarComplementacao(eq(1L), any(), eq("analista")))
+                    .thenReturn(processo);
 
             Processo result = service.devolver(1L, "Ajustar dados do formulário", "analista");
 
             assertEquals(SituacaoProcesso.PENDENTE_DOCUMENTACAO, result.getSituacao());
+            verify(complementacaoService).solicitarComplementacao(eq(1L), any(), eq("analista"));
         }
     }
 

@@ -16,6 +16,8 @@ import java.util.Base64;
 
 @Component
 public class PortalJwtExtractor {
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String PORTAL_ACCESS_TOKEN_TYPE = "portal_access";
 
     @Value("${jwt.public-key}")
     private String publicKeyPath;
@@ -29,36 +31,26 @@ public class PortalJwtExtractor {
 
     public Long extrairServidorId(HttpServletRequest request) {
         Claims claims = extrairClaims(request);
-        Object servidorIdObj = claims.get("servidorId");
-        if (servidorIdObj == null) {
-            throw new IllegalStateException("Token do portal sem identificação do servidor.");
-        }
-        if (servidorIdObj instanceof Integer integer) {
-            return integer.longValue();
-        }
-        return (Long) servidorIdObj;
+        return extrairClaimLong(claims,
+                "servidorId",
+                "Token do portal sem identificação do servidor.");
     }
 
     public Long extrairUnidadeGestoraId(HttpServletRequest request) {
         Claims claims = extrairClaims(request);
-        Object ugIdObj = claims.get("currentUnidadeGestora");
-        if (ugIdObj == null) {
-            throw new IllegalStateException("Token do portal sem identificação da unidade gestora.");
-        }
-        if (ugIdObj instanceof Integer integer) {
-            return integer.longValue();
-        }
-        return (Long) ugIdObj;
+        return extrairClaimLong(claims,
+                "currentUnidadeGestora",
+                "Token do portal sem identificação da unidade gestora.");
     }
 
     private Claims extrairClaims(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalStateException("Token de autenticação não fornecido.");
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            throw unauthorized("Token de autenticação não fornecido.");
         }
 
         try {
-            String token = authHeader.substring(7);
+            String token = authHeader.substring(BEARER_PREFIX.length());
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(publicKey)
                     .build()
@@ -66,15 +58,30 @@ public class PortalJwtExtractor {
                     .getBody();
 
             String tokenType = claims.get("type", String.class);
-            if (!"portal_access".equals(tokenType)) {
-                throw new IllegalStateException("Token inválido para o portal do servidor.");
+            if (!PORTAL_ACCESS_TOKEN_TYPE.equals(tokenType)) {
+                throw unauthorized("Token inválido para o portal do servidor.");
             }
             return claims;
-        } catch (IllegalStateException e) {
+        } catch (PortalAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalStateException("Token inválido ou expirado.");
+            throw unauthorized("Token inválido ou expirado.");
         }
+    }
+
+    private Long extrairClaimLong(Claims claims, String claimName, String missingMessage) {
+        Object claimValue = claims.get(claimName);
+        if (claimValue == null) {
+            throw unauthorized(missingMessage);
+        }
+        if (claimValue instanceof Number number) {
+            return number.longValue();
+        }
+        throw unauthorized("Token do portal contém dados inválidos.");
+    }
+
+    private PortalAuthenticationException unauthorized(String message) {
+        return new PortalAuthenticationException(message);
     }
 
     private PublicKey loadPublicKey(String path) throws Exception {

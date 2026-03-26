@@ -58,6 +58,9 @@ class ProcessoServiceTest {
     private ProcessoWorkflowService workflowService;
 
     @Mock
+    private ProcessoSnapshotEnrichmentService snapshotEnrichmentService;
+
+    @Mock
     private UnidadeGestoraRepository unidadeGestoraRepository;
 
     @Mock
@@ -110,6 +113,8 @@ class ProcessoServiceTest {
             entity.setSituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO);
             return null;
         }).when(workflowService).prepararParaSolicitacaoRh(any(Processo.class));
+
+        lenient().doNothing().when(snapshotEnrichmentService).enrich(any(Processo.class));
     }
 
     @AfterEach
@@ -331,26 +336,32 @@ class ProcessoServiceTest {
         @Test
         @DisplayName("Deve retornar dashboard com todos os contadores")
         void deveRetornarDashboard() {
+            when(processoRepository.countBySituacao(SituacaoProcesso.RASCUNHO)).thenReturn(4L);
             when(processoRepository.countBySituacao(SituacaoProcesso.ABERTO)).thenReturn(5L);
             when(processoRepository.countBySituacao(SituacaoProcesso.EM_ANALISE)).thenReturn(3L);
             when(processoRepository.countBySituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO)).thenReturn(2L);
             when(processoRepository.countBySituacao(SituacaoProcesso.AGUARDANDO_CHEFIA)).thenReturn(1L);
             when(processoRepository.countBySituacao(SituacaoProcesso.DEFERIDO)).thenReturn(10L);
             when(processoRepository.countBySituacao(SituacaoProcesso.INDEFERIDO)).thenReturn(2L);
+            when(processoRepository.countBySituacao(SituacaoProcesso.EM_EXECUCAO)).thenReturn(6L);
             when(processoRepository.countBySituacao(SituacaoProcesso.CONCLUIDO)).thenReturn(20L);
             when(processoRepository.countBySituacao(SituacaoProcesso.CANCELADO)).thenReturn(3L);
+            when(processoRepository.countBySituacao(SituacaoProcesso.ARQUIVADO)).thenReturn(7L);
             when(processoRepository.findVencidos()).thenReturn(List.of(processo));
             when(processoRepository.countByPeriodo(any(), any())).thenReturn(8L);
 
             Map<String, Object> dashboard = service.getDashboard();
 
             assertNotNull(dashboard);
+            assertEquals(4L, dashboard.get("rascunhos"));
             assertEquals(5L, dashboard.get("abertos"));
             assertEquals(3L, dashboard.get("emAnalise"));
             assertEquals(2L, dashboard.get("pendentes"));
             assertEquals(1L, dashboard.get("aguardandoChefia"));
             assertEquals(10L, dashboard.get("deferidos"));
+            assertEquals(6L, dashboard.get("emExecucao"));
             assertEquals(20L, dashboard.get("concluidos"));
+            assertEquals(7L, dashboard.get("arquivados"));
             assertEquals(1, dashboard.get("vencidos"));
             assertEquals(8L, dashboard.get("abertosNoMes"));
         }

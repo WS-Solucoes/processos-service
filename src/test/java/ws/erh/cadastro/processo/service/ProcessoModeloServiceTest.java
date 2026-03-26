@@ -104,7 +104,7 @@ class ProcessoModeloServiceTest {
         @Test
         @DisplayName("Deve criar modelo com sucesso")
         void deveCriarModeloComSucesso() {
-            when(processoModeloRepository.existsByCodigo("FERIAS")).thenReturn(false);
+            when(processoModeloRepository.existsByCodigoAndUnidadeGestoraId("FERIAS", 1L)).thenReturn(false);
             when(processoModeloRepository.save(any())).thenAnswer(inv -> {
                 ProcessoModelo m = inv.getArgument(0);
                 m.setId(1L);
@@ -122,7 +122,7 @@ class ProcessoModeloServiceTest {
         @Test
         @DisplayName("Deve rejeitar código duplicado")
         void deveRejeitarCodigoDuplicado() {
-            when(processoModeloRepository.existsByCodigo("FERIAS")).thenReturn(true);
+            when(processoModeloRepository.existsByCodigoAndUnidadeGestoraId("FERIAS", 1L)).thenReturn(true);
 
             assertThrows(IllegalStateException.class, () -> service.saveProcessoModelo(modelo));
             verify(processoModeloRepository, never()).save(any());
@@ -175,7 +175,8 @@ class ProcessoModeloServiceTest {
         @DisplayName("Deve retornar modelo por código")
         void deveRetornarPorCodigo() {
             modelo.setId(1L);
-            when(processoModeloRepository.findByCodigo("FERIAS")).thenReturn(Optional.of(modelo));
+            when(processoModeloRepository.findByCodigoAndUnidadeGestoraId("FERIAS", 1L))
+                    .thenReturn(Optional.of(modelo));
 
             ProcessoModelo result = service.findByCodigo("FERIAS");
 
@@ -186,7 +187,8 @@ class ProcessoModeloServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando modelo não encontrado por código")
         void deveLancarExcecaoNaoEncontradoPorCodigo() {
-            when(processoModeloRepository.findByCodigo("XPTO")).thenReturn(Optional.empty());
+            when(processoModeloRepository.findByCodigoAndUnidadeGestoraId("XPTO", 1L))
+                    .thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class, () -> service.findByCodigo("XPTO"));
         }
