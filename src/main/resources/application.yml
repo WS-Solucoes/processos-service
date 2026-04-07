@@ -22,7 +22,7 @@ spring:
       ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         enable_lazy_load_no_trans: true
@@ -57,6 +57,16 @@ management:
     web:
       exposure:
         include: health,info
+  health:
+    eureka:
+      enabled: false
+    diskspace:
+      enabled: false
+    rabbit:
+      enabled: false
+  endpoint:
+    health:
+      show-details: never
 
 cors:
   allowed-origins: "${PROCESSOS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:9300,https://wsolucoes.com,https://www.wsolucoes.com}"
