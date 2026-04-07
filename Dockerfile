@@ -11,12 +11,14 @@ COPY file-storage-service/pom.xml file-storage-service/pom.xml
 COPY api-gateway/pom.xml api-gateway/pom.xml
 COPY service-discovery/pom.xml service-discovery/pom.xml
 
-RUN mvn -pl processos-service -am dependency:go-offline
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -pl processos-service -am dependency:go-offline --batch-mode
 
 COPY common/src common/src
 COPY processos-service/src processos-service/src
 
-RUN mvn -pl processos-service -am clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -pl processos-service -am clean package -DskipTests --batch-mode
 
 FROM eclipse-temurin:21-jre
 
