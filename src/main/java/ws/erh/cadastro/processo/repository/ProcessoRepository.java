@@ -48,6 +48,14 @@ public interface ProcessoRepository extends JpaRepository<Processo, Long> {
     @Query("SELECT p FROM Processo p WHERE p.atribuidoPara = :usuario AND p.excluido = false ORDER BY p.prioridade, p.dataAbertura")
     Page<Processo> findByAtribuidoPara(@Param("usuario") String usuario, Pageable pageable);
 
+    @Query("SELECT p FROM Processo p WHERE p.atribuidoPara = :usuario AND p.situacao NOT IN :finalizados AND p.excluido = false ORDER BY p.prioridade, p.dataAbertura")
+    List<Processo> findAtivosAtribuidoPara(@Param("usuario") String usuario,
+                                           @Param("finalizados") List<SituacaoProcesso> finalizados);
+
+    @Query("SELECT COUNT(p) FROM Processo p WHERE p.atribuidoPara = :usuario AND p.situacao NOT IN :finalizados AND p.excluido = false")
+    long countAtivosAtribuidoPara(@Param("usuario") String usuario,
+                                  @Param("finalizados") List<SituacaoProcesso> finalizados);
+
     @Query("SELECT p FROM Processo p WHERE p.processoModelo.id = :modeloId AND p.excluido = false ORDER BY p.dataAbertura DESC")
     List<Processo> findByProcessoModeloId(@Param("modeloId") Long modeloId);
 

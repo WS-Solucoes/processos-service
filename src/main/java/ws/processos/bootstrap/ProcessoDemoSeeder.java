@@ -75,7 +75,7 @@ public class ProcessoDemoSeeder implements ApplicationRunner {
         seedRascunhoAtualizacao(tenant, principal);
         seedSolicitacaoRhFerias(tenant, principal);
         seedProcessoEmAnalise(tenant, principal);
-        seedProcessoAguardandoChefia(tenant, secundario);
+        seedProcessoAguardandoSuperior(tenant, secundario);
         seedProcessoConcluido(tenant, terciario);
     }
 
@@ -189,8 +189,8 @@ public class ProcessoDemoSeeder implements ApplicationRunner {
                 "Recebemos sua solicitacao. O documento esta em elaboracao.", false);
     }
 
-    private void seedProcessoAguardandoChefia(TenantTarget tenant, ServidorSeedTarget servidor) {
-        String marker = "[DEMO] Processo aguardando chefia e com prazo vencido para validar alertas.";
+    private void seedProcessoAguardandoSuperior(TenantTarget tenant, ServidorSeedTarget servidor) {
+        String marker = "[DEMO] Processo aguardando superior e com prazo vencido para validar alertas.";
         if (demoProcessoExists(tenant.id(), marker)) {
             return;
         }
@@ -202,14 +202,14 @@ public class ProcessoDemoSeeder implements ApplicationRunner {
 
         LocalDateTime abertura = LocalDateTime.now().minusDays(9);
         Processo processo = buildBaseProcesso(tenant, servidor, modelo, marker, abertura);
-        processo.setSituacao(SituacaoProcesso.AGUARDANDO_CHEFIA);
+        processo.setSituacao(SituacaoProcesso.AGUARDANDO_SUPERIOR);
         processo.setEtapaAtual(3);
         processo.setPrioridade(Prioridade.URGENTE);
         processo.setOrigemAbertura(OrigemAberturaProcesso.PORTAL_SERVIDOR);
         processo.setDadosFormulario("""
                 {"endereco":"Av. Caxanga, 2200","meioTransporte":"Onibus","valorDiario":"18.40","diasUteis":"22"}
                 """);
-        processo.setAtribuidoPara("Chefia Imediata");
+        processo.setAtribuidoPara("Superior Imediato");
         processo.setDepartamentoAtribuido("Gabinete do Secretario");
         processo.setPrazoLimite(LocalDate.now().minusDays(2));
         processo.setDataUltimaAtualizacao(abertura.plusDays(2));
@@ -223,12 +223,12 @@ public class ProcessoDemoSeeder implements ApplicationRunner {
                 SituacaoProcesso.ABERTO.name(), SituacaoProcesso.EM_ANALISE.name(),
                 1, 2, "Analista RH", TipoAutor.RH,
                 "Documentacao conferida e em analise pelo RH.");
-        saveHistorico(saved, abertura.plusDays(2), AcaoProcesso.ENCAMINHADO_CHEFIA,
-                SituacaoProcesso.EM_ANALISE.name(), SituacaoProcesso.AGUARDANDO_CHEFIA.name(),
+        saveHistorico(saved, abertura.plusDays(2), AcaoProcesso.ENCAMINHADO_SUPERIOR,
+                SituacaoProcesso.EM_ANALISE.name(), SituacaoProcesso.AGUARDANDO_SUPERIOR.name(),
                 2, 3, "Analista RH", TipoAutor.RH,
-                "Processo encaminhado para aprovacao da chefia.");
+                "Processo encaminhado para aprovacao do superior.");
         saveMensagem(saved, abertura.plusDays(2), "Analista RH", TipoAutor.RH,
-                "Sua solicitacao foi encaminhada para aprovacao da chefia imediata.", false);
+                "Sua solicitacao foi encaminhada para aprovacao do superior imediato.", false);
     }
 
     private void seedProcessoConcluido(TenantTarget tenant, ServidorSeedTarget servidor) {

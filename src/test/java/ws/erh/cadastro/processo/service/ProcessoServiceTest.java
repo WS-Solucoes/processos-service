@@ -340,7 +340,7 @@ class ProcessoServiceTest {
             when(processoRepository.countBySituacao(SituacaoProcesso.ABERTO)).thenReturn(5L);
             when(processoRepository.countBySituacao(SituacaoProcesso.EM_ANALISE)).thenReturn(3L);
             when(processoRepository.countBySituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO)).thenReturn(2L);
-            when(processoRepository.countBySituacao(SituacaoProcesso.AGUARDANDO_CHEFIA)).thenReturn(1L);
+            when(processoRepository.countBySituacao(SituacaoProcesso.AGUARDANDO_SUPERIOR)).thenReturn(1L);
             when(processoRepository.countBySituacao(SituacaoProcesso.DEFERIDO)).thenReturn(10L);
             when(processoRepository.countBySituacao(SituacaoProcesso.INDEFERIDO)).thenReturn(2L);
             when(processoRepository.countBySituacao(SituacaoProcesso.EM_EXECUCAO)).thenReturn(6L);
@@ -357,7 +357,7 @@ class ProcessoServiceTest {
             assertEquals(5L, dashboard.get("abertos"));
             assertEquals(3L, dashboard.get("emAnalise"));
             assertEquals(2L, dashboard.get("pendentes"));
-            assertEquals(1L, dashboard.get("aguardandoChefia"));
+            assertEquals(1L, dashboard.get("aguardandoSuperior"));
             assertEquals(10L, dashboard.get("deferidos"));
             assertEquals(6L, dashboard.get("emExecucao"));
             assertEquals(20L, dashboard.get("concluidos"));

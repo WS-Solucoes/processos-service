@@ -100,21 +100,21 @@ public class ProcessoGestaoService extends AbstractTenantService implements Proc
     }
 
     @Override
-    public Processo encaminharChefia(Long processoId, String usuario) {
-        log.info("Encaminhando processo ID: {} para chefia", processoId);
+    public Processo encaminharSuperior(Long processoId, String usuario) {
+        log.info("Encaminhando processo ID: {} para superior", processoId);
         Processo processo = findProcesso(processoId);
 
         String anterior = processo.getSituacao().name();
         Integer etapaAnterior = processo.getEtapaAtual();
-        workflowService.encaminharChefia(processo);
+        workflowService.encaminharSuperior(processo);
         processo.setDataUltimaAtualizacao(LocalDateTime.now());
         configurarDadosTenant(processo);
         Processo saved = processoRepository.save(processo);
-        registrarHistorico(saved, AcaoProcesso.ENCAMINHADO_CHEFIA, anterior,
-                SituacaoProcesso.AGUARDANDO_CHEFIA.name(), etapaAnterior, saved.getEtapaAtual(),
-                usuario, TipoAutor.RH, "Encaminhado para aprovação da chefia");
-        notificarServidor(saved, "Processo encaminhado à chefia",
-                "Seu processo " + saved.getProtocolo() + " foi encaminhado para aprovação da chefia.",
+        registrarHistorico(saved, AcaoProcesso.ENCAMINHADO_SUPERIOR, anterior,
+                SituacaoProcesso.AGUARDANDO_SUPERIOR.name(), etapaAnterior, saved.getEtapaAtual(),
+                usuario, TipoAutor.RH, "Encaminhado para aprovação do superior");
+        notificarServidor(saved, "Processo encaminhado ao superior",
+                "Seu processo " + saved.getProtocolo() + " foi encaminhado para aprovação do superior imediato.",
                 TipoNotificacao.INFO);
         return saved;
     }
@@ -187,6 +187,29 @@ public class ProcessoGestaoService extends AbstractTenantService implements Proc
         item.setOrdem(1);
         request.getItens().add(item);
         return complementacaoService.solicitarComplementacao(processoId, request, usuario != null ? usuario : "RH");
+    }
+
+    @Override
+    public Processo avancarFase(Long processoId, String usuario) {
+        log.info("Avançando fase do processo ID: {}", processoId);
+        Processo processo = findProcesso(processoId);
+        if (processo.getSituacao() != SituacaoProcesso.EM_ANALISE) {
+            throw new IllegalStateException("Processo deve estar EM_ANALISE para avançar fase. Estado atual: " + processo.getSituacao());
+        }
+
+        String anterior = processo.getSituacao().name();
+        Integer etapaAnterior = processo.getEtapaAtual();
+        workflowService.avancarFase(processo);
+        processo.setDataUltimaAtualizacao(LocalDateTime.now());
+        configurarDadosTenant(processo);
+        Processo saved = processoRepository.save(processo);
+        registrarHistorico(saved, AcaoProcesso.ETAPA_AVANCADA, anterior,
+                saved.getSituacao().name(), etapaAnterior, saved.getEtapaAtual(),
+                usuario, TipoAutor.RH, "Fase avançada para: " + workflowService.resolveEtapaAtualNome(saved));
+        notificarServidor(saved, "Processo avançou de fase",
+                "Seu processo " + saved.getProtocolo() + " avançou para a próxima fase.",
+                TipoNotificacao.INFO);
+        return saved;
     }
 
     @Override

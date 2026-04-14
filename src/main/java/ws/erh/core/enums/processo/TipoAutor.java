@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum TipoAutor {
     SERVIDOR("Servidor"),
     RH("RH"),
-    CHEFIA("Chefia"),
+    SUPERIOR("Superior"),
     SISTEMA("Sistema");
 
     private final String descricao;

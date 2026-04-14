@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import ws.common.logger.SalvarLog;
@@ -92,6 +93,15 @@ public class ProcessoGestaoController {
     public List<ProcessoResponse> getProcessosVencidos() {
         enableFilters();
         return processoService.findVencidos().stream()
+                .map(ProcessoResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    @FiltroTenant
+    @GetMapping("processo/gestao/meus-processos")
+    public List<ProcessoResponse> getMeusProcessos(@RequestParam String usuario) {
+        enableFilters();
+        return processoService.findAtivosAtribuidoPara(usuario).stream()
                 .map(ProcessoResponse::new)
                 .collect(Collectors.toList());
     }
@@ -209,13 +219,27 @@ public class ProcessoGestaoController {
         }
     }
 
-    @SalvarLog(acao = "Encaminhou processo para chefia")
-    @PostMapping("processo/gestao/{id}/encaminhar-chefia")
-    public ProcessoResponse encaminharChefia(@PathVariable Long id,
+    @SalvarLog(acao = "Avancou fase do processo")
+    @PostMapping("processo/gestao/{id}/avancar-fase")
+    public ProcessoResponse avancarFase(@PathVariable Long id,
+                                        @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String usuario = body != null ? body.get("usuario") : "RH";
+            return new ProcessoResponse(processoGestaoService.avancarFase(id, usuario), true);
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @SalvarLog(acao = "Encaminhou processo para superior")
+    @PostMapping("processo/gestao/{id}/encaminhar-superior")
+    public ProcessoResponse encaminharSuperior(@PathVariable Long id,
                                              @RequestBody(required = false) Map<String, String> body) {
         try {
             String usuario = body != null ? body.get("usuario") : "RH";
-            return new ProcessoResponse(processoGestaoService.encaminharChefia(id, usuario), true);
+            return new ProcessoResponse(processoGestaoService.encaminharSuperior(id, usuario), true);
         } catch (EntityNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (Exception e) {

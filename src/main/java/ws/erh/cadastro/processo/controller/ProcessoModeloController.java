@@ -181,7 +181,7 @@ public class ProcessoModeloController {
         modelo.setIcone(request.getIcone());
         modelo.setCor(request.getCor());
         modelo.setPrazoAtendimentoDias(request.getPrazoAtendimentoDias());
-        modelo.setRequerAprovacaoChefia(Boolean.TRUE.equals(request.getRequerAprovacaoChefia()));
+        modelo.setRequerAprovacaoSuperior(Boolean.TRUE.equals(request.getRequerAprovacaoSuperior()));
         modelo.setGeraAcaoAutomatica(Boolean.TRUE.equals(request.getGeraAcaoAutomatica()));
         modelo.setAtivo(request.getAtivo() == null || request.getAtivo());
         modelo.setVisivelPortal(request.getVisivelPortal() == null || request.getVisivelPortal());

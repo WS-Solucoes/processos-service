@@ -24,5 +24,6 @@ public interface ProcessoServiceInterface {
     Processo cancelar(Long id, String justificativa, String usuario);
     void deleteProcesso(Long id);
     Map<String, Object> getDashboard();
+    List<Processo> findAtivosAtribuidoPara(String usuario);
     String gerarProtocolo();
 }

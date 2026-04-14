@@ -109,6 +109,7 @@ public class ProcessoDetalheService {
                 campoResponse.setPlaceholder(campo.getPlaceholder());
                 campoResponse.setAjuda(campo.getAjuda());
                 campoResponse.setOrdem(campo.getOrdem());
+                campoResponse.setOpcoesSelect(campo.getOpcoesSelect());
                 Object valor = dadosFormulario.get(campo.getNomeCampo());
                 campoResponse.setValor(valor == null ? null : String.valueOf(valor));
 
@@ -407,7 +408,7 @@ public class ProcessoDetalheService {
                 .findFirst()
                 .orElseGet(() -> fases.stream()
                         .filter(fase -> "ATUAL".equals(fase.getStatus()) || "AGUARDANDO_SERVIDOR".equals(fase.getStatus())
-                                || "AGUARDANDO_RH".equals(fase.getStatus()) || "AGUARDANDO_CHEFIA".equals(fase.getStatus())
+                                || "AGUARDANDO_RH".equals(fase.getStatus()) || "AGUARDANDO_SUPERIOR".equals(fase.getStatus())
                                 || "EM_EXECUCAO".equals(fase.getStatus()) || "FINALIZADA".equals(fase.getStatus()))
                         .findFirst()
                         .orElse(fases.isEmpty() ? null : fases.get(0)));
@@ -431,8 +432,8 @@ public class ProcessoDetalheService {
                 || processo.getSituacao() == SituacaoProcesso.RASCUNHO) {
             return "AGUARDANDO_SERVIDOR";
         }
-        if (processo.getSituacao() == SituacaoProcesso.AGUARDANDO_CHEFIA) {
-            return "AGUARDANDO_CHEFIA";
+        if (processo.getSituacao() == SituacaoProcesso.AGUARDANDO_SUPERIOR) {
+            return "AGUARDANDO_SUPERIOR";
         }
         if (processo.getSituacao() == SituacaoProcesso.EM_EXECUCAO || processo.getSituacao() == SituacaoProcesso.DEFERIDO) {
             return "EM_EXECUCAO";

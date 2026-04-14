@@ -72,8 +72,8 @@ public class ProcessoModelo extends AbstractExecucaoTenantEntity {
     @Column(name = "prazo_atendimento_dias")
     private Integer prazoAtendimentoDias;
 
-    @Column(name = "requer_aprovacao_chefia")
-    private Boolean requerAprovacaoChefia = false;
+    @Column(name = "requer_aprovacao_superior")
+    private Boolean requerAprovacaoSuperior = false;
 
     @Column(name = "gera_acao_automatica")
     private Boolean geraAcaoAutomatica = false;

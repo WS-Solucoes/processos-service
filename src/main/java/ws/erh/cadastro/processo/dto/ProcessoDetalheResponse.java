@@ -109,6 +109,7 @@ public class ProcessoDetalheResponse {
         private String ajuda;
         private Integer ordem;
         private String valor;
+        private String opcoesSelect;
     }
 
     @Getter
