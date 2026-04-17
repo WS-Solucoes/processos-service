@@ -39,7 +39,7 @@ public class ProcessoModeloRequest {
 
     private Integer prazoAtendimentoDias;
 
-    private Boolean requerAprovacaoChefia;
+    private Boolean requerAprovacaoSuperior;
     private Boolean geraAcaoAutomatica;
     private Boolean ativo;
     private Boolean visivelPortal;

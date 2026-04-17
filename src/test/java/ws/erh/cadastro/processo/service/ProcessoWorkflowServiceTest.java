@@ -60,17 +60,17 @@ class ProcessoWorkflowServiceTest {
     }
 
     @Test
-    @DisplayName("Deve encaminhar para chefia usando proxima etapa de chefia")
-    void deveEncaminharParaChefiaUsandoProximaEtapaDeChefia() {
+    @DisplayName("Deve encaminhar para superior usando proxima etapa de superior")
+    void deveEncaminharParaSuperiorUsandoProximaEtapeDeSuperior() {
         Processo processo = buildProcesso();
         processo.setEtapaAtual(2);
         processo.setSituacao(SituacaoProcesso.EM_ANALISE);
 
-        service.encaminharChefia(processo);
+        service.encaminharSuperior(processo);
 
         assertEquals(3, processo.getEtapaAtual());
-        assertEquals(SituacaoProcesso.AGUARDANDO_CHEFIA, processo.getSituacao());
-        assertEquals("CHEFIA", service.resolveResponsavelAtual(processo));
+        assertEquals(SituacaoProcesso.AGUARDANDO_SUPERIOR, processo.getSituacao());
+        assertEquals("SUPERIOR", service.resolveResponsavelAtual(processo));
     }
 
     @Test
@@ -104,7 +104,7 @@ class ProcessoWorkflowServiceTest {
         modelo.setEtapas(new ArrayList<>(List.of(
                 etapa("Complementacao do Servidor", 1, TipoResponsavel.SERVIDOR),
                 etapa("Analise RH", 2, TipoResponsavel.RH),
-                etapa("Aprovacao da Chefia", 3, TipoResponsavel.CHEFIA)
+                etapa("Aprovação do Superior", 3, TipoResponsavel.SUPERIOR)
         )));
 
         Processo processo = new Processo();

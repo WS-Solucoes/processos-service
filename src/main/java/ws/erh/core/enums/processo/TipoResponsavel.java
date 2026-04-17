@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum TipoResponsavel {
     SERVIDOR("Servidor"),
     RH("RH"),
-    CHEFIA("Chefia");
+    SUPERIOR("Superior");
 
     private final String descricao;
 

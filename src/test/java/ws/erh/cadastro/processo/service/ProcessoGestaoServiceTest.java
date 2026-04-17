@@ -115,10 +115,10 @@ class ProcessoGestaoServiceTest {
 
         lenient().doAnswer(invocation -> {
             Processo entity = invocation.getArgument(0);
-            entity.setSituacao(SituacaoProcesso.AGUARDANDO_CHEFIA);
+            entity.setSituacao(SituacaoProcesso.AGUARDANDO_SUPERIOR);
             entity.setEtapaAtual(2);
             return null;
-        }).when(workflowService).encaminharChefia(any(Processo.class));
+        }).when(workflowService).encaminharSuperior(any(Processo.class));
     }
 
     @AfterEach
@@ -224,24 +224,24 @@ class ProcessoGestaoServiceTest {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // ENCAMINHAMENTO PARA CHEFIA
+    // ENCAMINHAMENTO PARA SUPERIOR
     // ═══════════════════════════════════════════════════════════════
 
     @Nested
-    @DisplayName("Encaminhamento para chefia")
-    class EncaminhamentoChefia {
+    @DisplayName("Encaminhamento para superior")
+    class EncaminhamentoSuperior {
 
         @Test
-        @DisplayName("Deve encaminhar processo para chefia")
-        void deveEncaminharParaChefia() {
+        @DisplayName("Deve encaminhar processo para superior")
+        void deveEncaminharParaSuperior() {
             processo.setSituacao(SituacaoProcesso.EM_ANALISE);
             when(processoRepository.findById(1L)).thenReturn(Optional.of(processo));
             when(processoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(historicoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            Processo result = service.encaminharChefia(1L, "analista");
+            Processo result = service.encaminharSuperior(1L, "analista");
 
-            assertEquals(SituacaoProcesso.AGUARDANDO_CHEFIA, result.getSituacao());
+            assertEquals(SituacaoProcesso.AGUARDANDO_SUPERIOR, result.getSituacao());
         }
     }
 

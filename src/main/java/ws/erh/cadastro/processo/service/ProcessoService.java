@@ -122,7 +122,7 @@ public class ProcessoService extends AbstractTenantService implements ProcessoSe
                 SituacaoProcesso.ABERTO,
                 SituacaoProcesso.EM_ANALISE,
                 SituacaoProcesso.PENDENTE_DOCUMENTACAO,
-                SituacaoProcesso.AGUARDANDO_CHEFIA
+                SituacaoProcesso.AGUARDANDO_SUPERIOR
         );
         return processoRepository.findBySituacaoIn(pendentes, pageable);
     }
@@ -173,7 +173,7 @@ public class ProcessoService extends AbstractTenantService implements ProcessoSe
         dashboard.put("abertos", processoRepository.countBySituacao(SituacaoProcesso.ABERTO));
         dashboard.put("emAnalise", processoRepository.countBySituacao(SituacaoProcesso.EM_ANALISE));
         dashboard.put("pendentes", processoRepository.countBySituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO));
-        dashboard.put("aguardandoChefia", processoRepository.countBySituacao(SituacaoProcesso.AGUARDANDO_CHEFIA));
+        dashboard.put("aguardandoSuperior", processoRepository.countBySituacao(SituacaoProcesso.AGUARDANDO_SUPERIOR));
         dashboard.put("deferidos", processoRepository.countBySituacao(SituacaoProcesso.DEFERIDO));
         dashboard.put("indeferidos", processoRepository.countBySituacao(SituacaoProcesso.INDEFERIDO));
         dashboard.put("emExecucao", processoRepository.countBySituacao(SituacaoProcesso.EM_EXECUCAO));
@@ -187,6 +187,14 @@ public class ProcessoService extends AbstractTenantService implements ProcessoSe
         dashboard.put("abertosNoMes", processoRepository.countByPeriodo(inicioMes, fimMes));
 
         return dashboard;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Processo> findAtivosAtribuidoPara(String usuario) {
+        List<SituacaoProcesso> finalizados = java.util.Arrays.asList(
+                SituacaoProcesso.CONCLUIDO, SituacaoProcesso.CANCELADO, SituacaoProcesso.ARQUIVADO);
+        return processoRepository.findAtivosAtribuidoPara(usuario, finalizados);
     }
 
     @Override

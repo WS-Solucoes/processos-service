@@ -29,7 +29,7 @@ public class ProcessoModeloResponse {
     private String icone;
     private String cor;
     private Integer prazoAtendimentoDias;
-    private Boolean requerAprovacaoChefia;
+    private Boolean requerAprovacaoSuperior;
     private Boolean geraAcaoAutomatica;
     private Boolean ativo;
     private Boolean visivelPortal;

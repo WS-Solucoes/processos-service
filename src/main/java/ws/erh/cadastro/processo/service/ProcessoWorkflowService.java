@@ -48,13 +48,13 @@ public class ProcessoWorkflowService {
         processo.setSituacao(SituacaoProcesso.PENDENTE_DOCUMENTACAO);
     }
 
-    public void encaminharChefia(Processo processo) {
+    public void encaminharSuperior(Processo processo) {
         ensureEtapaAtual(processo);
-        ProcessoEtapaModelo proximaChefia = findNextEtapa(processo, TipoResponsavel.CHEFIA);
-        if (proximaChefia != null) {
-            processo.setEtapaAtual(proximaChefia.getOrdem());
+        ProcessoEtapaModelo proximaSuperior = findNextEtapa(processo, TipoResponsavel.SUPERIOR);
+        if (proximaSuperior != null) {
+            processo.setEtapaAtual(proximaSuperior.getOrdem());
         }
-        processo.setSituacao(SituacaoProcesso.AGUARDANDO_CHEFIA);
+        processo.setSituacao(SituacaoProcesso.AGUARDANDO_SUPERIOR);
     }
 
     public String resolveEtapaAtualNome(Processo processo) {
@@ -73,7 +73,7 @@ public class ProcessoWorkflowService {
 
         return switch (processo.getSituacao()) {
             case RASCUNHO, PENDENTE_DOCUMENTACAO -> "SERVIDOR";
-            case AGUARDANDO_CHEFIA -> "CHEFIA";
+            case AGUARDANDO_SUPERIOR -> "SUPERIOR";
             case EM_EXECUCAO -> "SISTEMA";
             case DEFERIDO, INDEFERIDO, CANCELADO, CONCLUIDO, ARQUIVADO -> "FINALIZADO";
             default -> {
@@ -100,13 +100,32 @@ public class ProcessoWorkflowService {
             case RASCUNHO -> List.of("SUBMETER", "CANCELAR");
             case PENDENTE_DOCUMENTACAO -> List.of("COMPLEMENTAR", "CANCELAR", "ENVIAR_MENSAGEM");
             case ABERTO -> List.of("ATRIBUIR", "ANALISAR", "SOLICITAR_DOCUMENTACAO", "ENVIAR_MENSAGEM");
-            case EM_ANALISE -> List.of("SOLICITAR_DOCUMENTACAO", "ENCAMINHAR_CHEFIA", "DEFERIR", "INDEFERIR", "DEVOLVER", "ENVIAR_MENSAGEM");
-            case AGUARDANDO_CHEFIA -> List.of("DEFERIR", "INDEFERIR", "DEVOLVER", "ENVIAR_MENSAGEM");
+            case EM_ANALISE -> {
+                List<String> acoes = new ArrayList<>(List.of("SOLICITAR_DOCUMENTACAO", "ENCAMINHAR_SUPERIOR", "DEFERIR", "INDEFERIR", "DEVOLVER", "ENVIAR_MENSAGEM"));
+                if (hasNextEtapa(processo)) {
+                    acoes.add(0, "AVANCAR_FASE");
+                }
+                yield acoes;
+            }
+            case AGUARDANDO_SUPERIOR -> List.of("DEFERIR", "INDEFERIR", "DEVOLVER", "ENVIAR_MENSAGEM");
             case DEFERIDO -> List.of("REPROCESSAR_INTEGRACAO", "ARQUIVAR");
             case EM_EXECUCAO -> List.of("ACOMPANHAR_EXECUCAO");
             case CONCLUIDO -> List.of("ARQUIVAR");
             default -> List.of();
         };
+    }
+
+    public boolean hasNextEtapa(Processo processo) {
+        if (processo == null || processo.getEtapaAtual() == null) return false;
+        Integer etapaAtual = processo.getEtapaAtual();
+        return getEtapasOrdenadas(processo.getProcessoModelo()).stream()
+                .anyMatch(e -> e.getOrdem() != null && e.getOrdem() > etapaAtual);
+    }
+
+    public void avancarFase(Processo processo) {
+        ensureEtapaAtual(processo);
+        advanceToNextEtapa(processo);
+        aplicarSituacaoDaEtapaAtual(processo, true);
     }
 
     public TipoResponsavel getTipoResponsavelEtapaAtual(Processo processo) {
@@ -179,7 +198,7 @@ public class ProcessoWorkflowService {
     private SituacaoProcesso situacaoParaResponsavel(TipoResponsavel tipoResponsavel, boolean analysisStarted) {
         return switch (tipoResponsavel) {
             case SERVIDOR -> SituacaoProcesso.PENDENTE_DOCUMENTACAO;
-            case CHEFIA -> SituacaoProcesso.AGUARDANDO_CHEFIA;
+            case SUPERIOR -> SituacaoProcesso.AGUARDANDO_SUPERIOR;
             case RH -> analysisStarted ? SituacaoProcesso.EM_ANALISE : SituacaoProcesso.ABERTO;
         };
     }

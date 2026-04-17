@@ -8,7 +8,7 @@ public enum SituacaoProcesso {
     ABERTO("Aberto"),
     EM_ANALISE("Em Análise"),
     PENDENTE_DOCUMENTACAO("Pendente de Documentação"),
-    AGUARDANDO_CHEFIA("Aguardando Chefia"),
+    AGUARDANDO_SUPERIOR("Aguardando Superior"),
     DEFERIDO("Deferido"),
     INDEFERIDO("Indeferido"),
     EM_EXECUCAO("Em Execução"),
