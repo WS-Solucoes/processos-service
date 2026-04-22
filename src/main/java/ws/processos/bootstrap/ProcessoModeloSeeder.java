@@ -260,7 +260,7 @@ public class ProcessoModeloSeeder implements ApplicationRunner {
             List<TenantTarget> tenants = jdbcTemplate.query(
                     """
                     SELECT id, nome
-                    FROM unidade_gestora
+                    FROM common.unidade_gestora
                     WHERE COALESCE(ativo, true) = true
                       AND COALESCE(excluido, false) = false
                     ORDER BY id

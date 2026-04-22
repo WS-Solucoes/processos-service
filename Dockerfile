@@ -10,6 +10,10 @@ COPY processos-service/pom.xml processos-service/pom.xml
 COPY file-storage-service/pom.xml file-storage-service/pom.xml
 COPY api-gateway/pom.xml api-gateway/pom.xml
 COPY service-discovery/pom.xml service-discovery/pom.xml
+COPY compras-service/pom.xml compras-service/pom.xml
+COPY licitacao-service/pom.xml licitacao-service/pom.xml
+COPY contratos-service/pom.xml contratos-service/pom.xml
+COPY egestao/pom.xml egestao/pom.xml
 
 RUN --mount=type=cache,target=/root/.m2,sharing=locked \
     mvn -pl processos-service -am dependency:go-offline --batch-mode
