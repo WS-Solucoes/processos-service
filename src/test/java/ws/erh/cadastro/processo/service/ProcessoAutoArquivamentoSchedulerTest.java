@@ -10,7 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ws.erh.cadastro.processo.repository.ProcessoRepository;
 import ws.erh.core.enums.processo.SituacaoProcesso;
+import ws.erh.core.enums.processo.CategoriaProcesso;
 import ws.erh.model.cadastro.processo.Processo;
+import ws.erh.model.cadastro.processo.ProcessoModelo;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -178,6 +180,85 @@ class ProcessoAutoArquivamentoSchedulerTest {
             assertDoesNotThrow(() -> scheduler.autoArquivarProcessos());
 
             verify(processoGestaoService, atLeast(1)).arquivar(any(), eq("SISTEMA"));
+        }
+    }
+
+    @Nested
+    @DisplayName("S5.10 — SLA por categoria")
+    class SlaPorCategoria {
+
+        private Processo processoComCategoria(Long id, CategoriaProcesso categoria,
+                                              SituacaoProcesso situacao, int diasInativo) {
+            ProcessoModelo modelo = new ProcessoModelo();
+            modelo.setCategoria(categoria);
+            Processo p = new Processo();
+            p.setId(id);
+            p.setProtocolo("PROC-SLA-" + id);
+            p.setSituacao(situacao);
+            p.setProcessoModelo(modelo);
+            p.setDataAbertura(LocalDateTime.now().minusDays(diasInativo));
+            p.setDataUltimaAtualizacao(LocalDateTime.now().minusDays(diasInativo));
+            return p;
+        }
+
+        @Test
+        @DisplayName("Arquiva processo FERIAS em EM_ANALISE com mais de 30 dias")
+        void deveArquivarFeriasAposSla() {
+            Processo p = processoComCategoria(10L, CategoriaProcesso.FERIAS,
+                    SituacaoProcesso.EM_ANALISE, 45);
+            lenient().when(processoRepository.findBySituacao(SituacaoProcesso.EM_ANALISE))
+                    .thenReturn(List.of(p));
+            lenient().when(processoGestaoService.arquivar(10L, "SISTEMA")).thenReturn(p);
+
+            int total = scheduler.arquivarPorSlaCategoria();
+
+            assertEquals(1, total);
+            verify(processoGestaoService).arquivar(10L, "SISTEMA");
+        }
+
+        @Test
+        @DisplayName("Não arquiva processo FERIAS dentro do SLA (15 dias)")
+        void naoDeveArquivarFeriasDentroSla() {
+            Processo p = processoComCategoria(11L, CategoriaProcesso.FERIAS,
+                    SituacaoProcesso.EM_ANALISE, 15);
+            lenient().when(processoRepository.findBySituacao(SituacaoProcesso.EM_ANALISE))
+                    .thenReturn(List.of(p));
+
+            int total = scheduler.arquivarPorSlaCategoria();
+
+            assertEquals(0, total);
+            verify(processoGestaoService, never()).arquivar(any(), any());
+        }
+
+        @Test
+        @DisplayName("Usa SLA padrão (60d) quando processo não tem categoria")
+        void usaSlaPadraoSemCategoria() {
+            Processo p = new Processo();
+            p.setId(12L);
+            p.setProtocolo("PROC-SLA-12");
+            p.setSituacao(SituacaoProcesso.EM_EXECUCAO);
+            p.setDataUltimaAtualizacao(LocalDateTime.now().minusDays(80));
+            lenient().when(processoRepository.findBySituacao(SituacaoProcesso.EM_EXECUCAO))
+                    .thenReturn(List.of(p));
+            lenient().when(processoGestaoService.arquivar(12L, "SISTEMA")).thenReturn(p);
+
+            int total = scheduler.arquivarPorSlaCategoria();
+
+            assertEquals(1, total);
+        }
+
+        @Test
+        @DisplayName("FINANCEIRO tem SLA mais permissivo (90d) e não arquiva em 60d")
+        void financeiroNaoArquivaEm60Dias() {
+            Processo p = processoComCategoria(13L, CategoriaProcesso.FINANCEIRO,
+                    SituacaoProcesso.EM_EXECUCAO, 60);
+            lenient().when(processoRepository.findBySituacao(SituacaoProcesso.EM_EXECUCAO))
+                    .thenReturn(List.of(p));
+
+            int total = scheduler.arquivarPorSlaCategoria();
+
+            assertEquals(0, total);
+            verify(processoGestaoService, never()).arquivar(any(), any());
         }
     }
 }
