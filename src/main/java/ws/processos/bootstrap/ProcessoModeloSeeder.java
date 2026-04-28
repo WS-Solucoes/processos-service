@@ -1249,6 +1249,119 @@ public class ProcessoModeloSeeder implements ApplicationRunner {
                                 new CampoSeed("data_posse", "Data de Posse", TipoCampo.DATE, true, null, "", "Data de posse e inicio do exercicio", 3),
                                 new CampoSeed("observacoes_servidor", "Observacoes do Servidor", TipoCampo.TEXTAREA, false, null, "", "Atividades realizadas, dificuldades encontradas ou metas atingidas no periodo", 4)
                         )
+                ),
+                // ── Sprint 4 (S4.12): Admissão de novo servidor ────────────────────────
+                new ProcessoModeloSeed(
+                        "PROC_ADMISSAO",
+                        List.of(),
+                        "Admissao de Novo Servidor",
+                        "Processo de admissao e criacao do vinculo funcional para novo servidor (efetivo, comissionado, contratado ou estagiario)",
+                        "Preencha os dados do servidor e vinculo. Apos deferimento o sistema cria automaticamente o cadastro do servidor (se nao existir), o vinculo funcional e o detalhamento (lotacao + nivel). Anexe a documentacao obrigatoria e o ato de nomeacao.",
+                        CategoriaProcesso.CADASTRAL,
+                        "PersonAdd",
+                        "#16A34A",
+                        15,
+                        false,
+                        true,
+                        true,
+                        true,
+                        35,
+                        List.of(
+                                new DocumentoSeed("Ato de Nomeacao", "Portaria ou ato de nomeacao publicado", true, "PDF", 5, null, 1),
+                                new DocumentoSeed("CPF", "Copia do CPF", true, "PDF,JPG,PNG", 2, null, 2),
+                                new DocumentoSeed("RG", "Copia do RG (frente e verso)", true, "PDF,JPG,PNG", 5, null, 3),
+                                new DocumentoSeed("Comprovante de Escolaridade", "Diploma ou certificado exigido para o cargo", true, "PDF", 5, null, 4),
+                                new DocumentoSeed("Comprovante de Residencia", "Conta de luz, agua ou similar (ate 3 meses)", true, "PDF,JPG,PNG", 2, null, 5),
+                                new DocumentoSeed("Atestado Medico Admissional", "ASO admissional emitido por medico do trabalho", true, "PDF", 5, null, 6)
+                        ),
+                        List.of(
+                                new EtapaSeed("Validacao Documental", "RH confere documentos exigidos e dados informados", 1, TipoResponsavel.RH, null, 5),
+                                new EtapaSeed("Aprovacao da Direcao", "Aprovacao final da admissao pela direcao", 2, TipoResponsavel.SUPERIOR, null, 5),
+                                new EtapaSeed("Criacao do Vinculo", "Publicacao do ato e criacao automatica do vinculo no sistema", 3, TipoResponsavel.RH, null, 5)
+                        ),
+                        List.of(
+                                new CampoSeed("nome_servidor", "Nome Completo", TipoCampo.TEXT, true, null, "", "Nome completo do servidor a ser admitido", 1),
+                                new CampoSeed("cpf_servidor", "CPF", TipoCampo.TEXT, true, null, "000.000.000-00", "CPF do novo servidor (sera usado para criar o cadastro)", 2),
+                                new CampoSeed("data_nascimento", "Data de Nascimento", TipoCampo.DATE, true, null, "", "Data de nascimento do servidor", 3),
+                                new CampoSeed("matricula", "Matricula Funcional", TipoCampo.TEXT, true, null, "", "Numero da matricula que sera atribuida (deve ser unica)", 4),
+                                new CampoSeed("data_admissao", "Data de Admissao / Posse", TipoCampo.DATE, true, null, "", "Data efetiva de inicio do vinculo (posse)", 5),
+                                new CampoSeed("tipo_vinculo", "Tipo de Vinculo", TipoCampo.SELECT, true, "EFETIVO|COMISSIONADO|CONTRATADO|ESTAGIARIO|TEMPORARIO", "", "Selecione o regime do novo vinculo", 6),
+                                new CampoSeed("cargo_id", "Cargo", TipoCampo.NUMBER, true, null, "", "ID do cargo (consulte cadastro de cargos)", 7),
+                                new CampoSeed("nivel_id", "Nivel / Referencia", TipoCampo.NUMBER, false, null, "", "ID do nivel/referencia inicial (opcional — usa o primeiro do cargo)", 8),
+                                new CampoSeed("lotacao_id", "Lotacao", TipoCampo.NUMBER, true, null, "", "ID da lotacao de exercicio inicial", 9),
+                                new CampoSeed("numero_ato", "Numero do Ato de Nomeacao", TipoCampo.TEXT, true, null, "Ex: Portaria 123/2026", "Numero/identificacao do ato de nomeacao", 10),
+                                new CampoSeed("data_publicacao_ato", "Data de Publicacao do Ato", TipoCampo.DATE, true, null, "", "Data em que o ato foi publicado", 11),
+                                new CampoSeed("observacao", "Observacoes", TipoCampo.TEXTAREA, false, null, "", "Informacoes adicionais sobre a admissao", 12)
+                        )
+                ),
+                // ── Sprint 5 (S5.11): Transferência / Remoção ──────────────────────────
+                new ProcessoModeloSeed(
+                        "PROC_TRANSFERENCIA",
+                        List.of(),
+                        "Transferencia / Remocao",
+                        "Processo de transferencia ou remocao do servidor entre lotacoes (mesma UG ou entre UGs)",
+                        "Informe a nova lotacao de destino, a data efetiva da transferencia e o numero do ato. Apos deferimento, o sistema cria automaticamente um novo detalhe no vinculo funcional do servidor com a nova lotacao, mantendo o historico de movimentacoes.",
+                        CategoriaProcesso.CADASTRAL,
+                        "SwapHoriz",
+                        "#0EA5E9",
+                        10,
+                        true,
+                        true,
+                        true,
+                        true,
+                        36,
+                        List.of(
+                                new DocumentoSeed("Ato de Transferencia", "Portaria, oficio ou ato administrativo da transferencia", true, "PDF", 5, null, 1),
+                                new DocumentoSeed("Justificativa", "Justificativa formal da transferencia (opcional)", false, "PDF", 2, null, 2)
+                        ),
+                        List.of(
+                                new EtapaSeed("Validacao Documental", "RH valida documentos e dados informados", 1, TipoResponsavel.RH, null, 3),
+                                new EtapaSeed("Aprovacao Superior", "Aprovacao da chefia imediata e da nova lotacao", 2, TipoResponsavel.SUPERIOR, null, 5),
+                                new EtapaSeed("Publicacao do Ato", "Publicacao do ato e atualizacao do vinculo no sistema", 3, TipoResponsavel.RH, null, 5)
+                        ),
+                        List.of(
+                                new CampoSeed("data_transferencia", "Data da Transferencia", TipoCampo.DATE, true, null, "", "Data efetiva da movimentacao (data do detalhe)", 1),
+                                new CampoSeed("nova_lotacao_id", "Nova Lotacao", TipoCampo.NUMBER, true, null, "", "ID da lotacao de destino", 2),
+                                new CampoSeed("unidade_gestora_origem_id", "Unidade Gestora de Origem", TipoCampo.NUMBER, false, null, "", "ID da UG de origem (preencher quando transferencia entre UGs)", 3),
+                                new CampoSeed("origem_matricula", "Matricula de Origem", TipoCampo.TEXT, false, null, "", "Matricula anterior (preencher quando transferencia entre UGs)", 4),
+                                new CampoSeed("numero_ato", "Numero do Ato", TipoCampo.TEXT, true, null, "Ex: Portaria 045/2026", "Numero/identificacao do ato administrativo", 5),
+                                new CampoSeed("data_publicacao_ato", "Data de Publicacao do Ato", TipoCampo.DATE, true, null, "", "Data de publicacao no diario oficial", 6),
+                                new CampoSeed("observacao", "Observacoes", TipoCampo.TEXTAREA, false, null, "", "Informacoes adicionais sobre a movimentacao", 7)
+                        )
+                ),
+                // ── Sprint 5 (S5.11): Progressão Funcional ─────────────────────────────
+                new ProcessoModeloSeed(
+                        "PROC_PROGRESSAO_FUNCIONAL",
+                        List.of(),
+                        "Progressao Funcional",
+                        "Processo de progressao horizontal/vertical do servidor (mudanca de nivel/referencia que afeta o salario-base)",
+                        "Informe o novo nivel/referencia, a data efetiva da progressao e o numero do ato. Apos deferimento, o sistema cria automaticamente um novo detalhe no vinculo funcional do servidor com o novo nivel, atualizando o salario-base nas folhas a partir da competencia da progressao.",
+                        CategoriaProcesso.CADASTRAL,
+                        "TrendingUp",
+                        "#9333EA",
+                        15,
+                        true,
+                        true,
+                        true,
+                        true,
+                        37,
+                        List.of(
+                                new DocumentoSeed("Ato de Progressao", "Portaria ou ato administrativo da progressao", true, "PDF", 5, null, 1),
+                                new DocumentoSeed("Avaliacao de Desempenho", "Avaliacao usada como base para progressao (quando aplicavel)", false, "PDF", 5, null, 2)
+                        ),
+                        List.of(
+                                new EtapaSeed("Validacao Documental", "RH valida documentos e requisitos da progressao", 1, TipoResponsavel.RH, null, 5),
+                                new EtapaSeed("Aprovacao Superior", "Aprovacao da chefia e do RH", 2, TipoResponsavel.SUPERIOR, null, 5),
+                                new EtapaSeed("Publicacao do Ato", "Publicacao do ato e atualizacao do vinculo no sistema", 3, TipoResponsavel.RH, null, 5)
+                        ),
+                        List.of(
+                                new CampoSeed("tipo_progressao", "Tipo de Progressao", TipoCampo.SELECT, true, "HORIZONTAL|VERTICAL", "", "Horizontal: mudanca de referencia. Vertical: mudanca de classe/nivel.", 1),
+                                new CampoSeed("data_progressao", "Data da Progressao", TipoCampo.DATE, true, null, "", "Data efetiva da progressao (data do detalhe)", 2),
+                                new CampoSeed("novo_nivel_id", "Novo Nivel / Referencia", TipoCampo.NUMBER, true, null, "", "ID do novo nivel/referencia", 3),
+                                new CampoSeed("numero_ato", "Numero do Ato", TipoCampo.TEXT, true, null, "Ex: Portaria 078/2026", "Numero/identificacao do ato administrativo", 4),
+                                new CampoSeed("data_publicacao_ato", "Data de Publicacao do Ato", TipoCampo.DATE, true, null, "", "Data de publicacao no diario oficial", 5),
+                                new CampoSeed("observacao", "Observacoes", TipoCampo.TEXTAREA, false, null, "", "Informacoes adicionais sobre a progressao", 6)
+                        )
                 )
         );
     }
