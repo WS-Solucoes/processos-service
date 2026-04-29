@@ -65,6 +65,9 @@ public class ProcessoAutoArquivamentoScheduler {
     @Autowired
     private ProcessoGestaoServiceInterface processoGestaoService;
 
+    @Autowired
+    private ConfiguracaoAutoArquivamentoService configService;
+
     /**
      * Executa diariamente às 02:00 da manhã.
      * Arquiva processos concluídos ou cancelados há mais de 90 dias,
@@ -74,22 +77,27 @@ public class ProcessoAutoArquivamentoScheduler {
     @Scheduled(cron = "0 0 2 * * *")
     @Transactional
     public void autoArquivarProcessos() {
+        var cfg = configService.obterOuCriarPadrao();
+        if (Boolean.FALSE.equals(cfg.getHabilitado())) {
+            log.info("Auto-arquivamento desabilitado por configuração — pulando execução");
+            return;
+        }
         log.info("Iniciando auto-arquivamento de processos inativos...");
 
         int totalArquivados = 0;
 
-        // 1. Arquivar processos concluídos há mais de 90 dias
+        // 1. Arquivar processos concluídos há mais de N dias (configurável)
         totalArquivados += arquivarPorSituacao(
-                SituacaoProcesso.CONCLUIDO, 90,
-                "Auto-arquivado: processo concluído há mais de 90 dias");
+                SituacaoProcesso.CONCLUIDO, cfg.getDiasConcluido(),
+                "Auto-arquivado: processo concluído há mais de " + cfg.getDiasConcluido() + " dias");
 
-        // 2. Arquivar processos cancelados há mais de 90 dias
+        // 2. Arquivar processos cancelados há mais de N dias (configurável)
         totalArquivados += arquivarPorSituacao(
-                SituacaoProcesso.CANCELADO, 90,
-                "Auto-arquivado: processo cancelado há mais de 90 dias");
+                SituacaoProcesso.CANCELADO, cfg.getDiasCancelado(),
+                "Auto-arquivado: processo cancelado há mais de " + cfg.getDiasCancelado() + " dias");
 
-        // 3. Arquivar processos pendentes de documentação sem atualização há mais de 30 dias
-        totalArquivados += arquivarPendentesInativos(30);
+        // 3. Pendentes de documentação
+        totalArquivados += arquivarPendentesInativos(cfg.getDiasPendenteDocumentacao());
 
         // 4. S5.10 - SLA por categoria sobre situações ativas
         totalArquivados += arquivarPorSlaCategoria();
@@ -163,9 +171,7 @@ public class ProcessoAutoArquivamentoScheduler {
             for (Processo processo : processoRepository.findBySituacao(situacao)) {
                 CategoriaProcesso categoria = processo.getProcessoModelo() != null
                         ? processo.getProcessoModelo().getCategoria() : null;
-                int slaDias = categoria != null && SLA_DIAS_POR_CATEGORIA.containsKey(categoria)
-                        ? SLA_DIAS_POR_CATEGORIA.get(categoria)
-                        : SLA_DIAS_PADRAO;
+                int slaDias = configService.slaDiasPara(categoria);
 
                 LocalDateTime referencia = processo.getDataUltimaAtualizacao() != null
                         ? processo.getDataUltimaAtualizacao()
