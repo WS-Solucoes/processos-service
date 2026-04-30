@@ -51,7 +51,10 @@ public class ProcessoDemoSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        if (!tableExists("processos", "processo") || !tableExists("public", "servidor")) {
+        if (!tableExists("processos", "processo")
+                || !tableExists("public", "servidor")
+                || !tableExists("public", "unidade_gestora")
+                || !tableExists("public", "vinculo_funcional")) {
             log.info("Seed demo de processos ignorado: estruturas de banco ainda nao disponiveis.");
             return;
         }

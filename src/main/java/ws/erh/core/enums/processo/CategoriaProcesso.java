@@ -11,6 +11,7 @@ public enum CategoriaProcesso {
     CADASTRAL("Atualização Cadastral"),
     FINANCEIRO("Assunto Financeiro"),
     DOCUMENTAL("Solicitação de Documento"),
+    LIBERACAO_LOTE_PAGAMENTO("Liberação de Lote de Pagamento"),
     OUTROS("Outros");
 
     private final String descricao;

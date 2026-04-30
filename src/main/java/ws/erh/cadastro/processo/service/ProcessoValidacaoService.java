@@ -5,18 +5,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import ws.erh.cadastro.processo.dto.ProcessoPendenciaDocumentalResponse;
 import ws.erh.core.enums.processo.SituacaoDocumento;
+import ws.erh.core.enums.processo.TipoCampo;
 import ws.erh.model.cadastro.processo.Processo;
 import ws.erh.model.cadastro.processo.ProcessoCampoModelo;
 import ws.erh.model.cadastro.processo.ProcessoDocumento;
 import ws.erh.model.cadastro.processo.ProcessoDocumentoModelo;
 import ws.erh.model.cadastro.processo.ProcessoModelo;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,11 +31,13 @@ public class ProcessoValidacaoService {
 
     public void validarSubmissao(ProcessoModelo modelo, String dadosFormulario, List<Long> documentoModeloIds) {
         validarCamposObrigatorios(modelo, dadosFormulario);
+        validarSchemaFormulario(modelo, dadosFormulario);
         validarDocumentosObrigatorios(modelo, documentoModeloIds);
     }
 
     public void validarProcessoParaDeferimento(Processo processo) {
         validarCamposObrigatorios(processo.getProcessoModelo(), processo.getDadosFormulario());
+        validarSchemaFormulario(processo.getProcessoModelo(), processo.getDadosFormulario());
 
         List<ProcessoPendenciaDocumentalResponse> pendencias = calcularPendencias(processo);
         List<String> obrigatoriosInvalidos = pendencias.stream()
@@ -125,6 +132,107 @@ public class ProcessoValidacaoService {
         if (!faltantes.isEmpty()) {
             throw new IllegalStateException("Documentos obrigatórios não enviados: " + String.join(", ", faltantes));
         }
+    }
+
+    /**
+     * Valida o conteúdo de {@code dadosFormulario} contra o schema declarado em
+     * {@link ProcessoModelo#getCamposAdicionais()} (S6.9).
+     *
+     * <p>Para cada campo presente nos dados (campos ausentes / vazios não-obrigatórios
+     * são ignorados aqui — a obrigatoriedade é tratada por
+     * {@link #validarCamposObrigatorios}), checa:</p>
+     * <ul>
+     *   <li>{@link TipoCampo#NUMBER}: valor parseável como número.</li>
+     *   <li>{@link TipoCampo#DATE}: valor ISO {@code yyyy-MM-dd}.</li>
+     *   <li>{@link TipoCampo#BOOLEAN}: valor {@code true}/{@code false} (Boolean ou string).</li>
+     *   <li>{@link TipoCampo#SELECT}: valor presente em {@code opcoesSelect} (separador {@code |}).</li>
+     *   <li>{@link TipoCampo#TEXT}/{@link TipoCampo#TEXTAREA}: qualquer string aceita.</li>
+     * </ul>
+     *
+     * <p>Aglutina todos os erros e lança {@link IllegalStateException} única
+     * com a lista para que o frontend mostre tudo de uma vez.</p>
+     */
+    public void validarSchemaFormulario(ProcessoModelo modelo, String dadosFormulario) {
+        if (modelo == null || modelo.getCamposAdicionais() == null || modelo.getCamposAdicionais().isEmpty()) {
+            return;
+        }
+        Map<String, Object> dados = parseFormulario(dadosFormulario);
+        if (dados.isEmpty()) {
+            return;
+        }
+
+        List<String> erros = new ArrayList<>();
+        for (ProcessoCampoModelo campo : modelo.getCamposAdicionais()) {
+            if (campo.getNomeCampo() == null || campo.getTipoCampo() == null) {
+                continue;
+            }
+            Object valor = dados.get(campo.getNomeCampo());
+            if (isBlankValue(valor)) {
+                continue; // ausente/vazio: presença é verificada à parte
+            }
+            String erro = validarValorCampo(campo, valor);
+            if (erro != null) {
+                erros.add(erro);
+            }
+        }
+        if (!erros.isEmpty()) {
+            throw new IllegalStateException("Campos do formulário inválidos: " + String.join("; ", erros));
+        }
+    }
+
+    private String validarValorCampo(ProcessoCampoModelo campo, Object valor) {
+        String label = campo.getLabel() != null ? campo.getLabel() : campo.getNomeCampo();
+        switch (campo.getTipoCampo()) {
+            case NUMBER:
+                if (valor instanceof Number) {
+                    return null;
+                }
+                try {
+                    Double.parseDouble(String.valueOf(valor).trim());
+                    return null;
+                } catch (NumberFormatException ex) {
+                    return label + " deve ser numérico";
+                }
+            case DATE:
+                try {
+                    LocalDate.parse(String.valueOf(valor).trim());
+                    return null;
+                } catch (DateTimeParseException ex) {
+                    return label + " deve estar no formato yyyy-MM-dd";
+                }
+            case BOOLEAN:
+                if (valor instanceof Boolean) {
+                    return null;
+                }
+                String s = String.valueOf(valor).trim().toLowerCase();
+                if ("true".equals(s) || "false".equals(s)) {
+                    return null;
+                }
+                return label + " deve ser true ou false";
+            case SELECT:
+                Set<String> opcoes = parseOpcoesSelect(campo.getOpcoesSelect());
+                if (opcoes.isEmpty()) {
+                    return null; // sem opcões declaradas: aceita qualquer string
+                }
+                if (!opcoes.contains(String.valueOf(valor).trim())) {
+                    return label + " deve ser uma das opções: " + String.join(" | ", opcoes);
+                }
+                return null;
+            case TEXT:
+            case TEXTAREA:
+            default:
+                return null;
+        }
+    }
+
+    private static Set<String> parseOpcoesSelect(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Set.of();
+        }
+        return Arrays.stream(raw.split("\\|"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
     }
 
     private Map<String, Object> parseFormulario(String dadosFormulario) {
